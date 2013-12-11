@@ -6,7 +6,7 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
-featureBranch=$(git branch | sed -n '/$1/p')
+featureBranch=$(git branch | sed -n "/$1/p")
 if [ -z "$featureBranch" ]; then
 	echo "Feature branch $featureBranch not found. Please ensure you have spelled the branch name correctly"
 	exit 1
