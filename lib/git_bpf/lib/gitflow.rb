@@ -108,7 +108,7 @@ HELP
 
   # Pager from http://nex-3.com/posts/73-git-style-automatic-paging-in-ruby
   def pager
-    return if RUBY_PLATFORM =~ /win32/
+    return if RUBY_PLATFORM =~ /win32/ or RUBY_PLATFORM =~ /mingw32/
     return unless STDOUT.tty?
 
     read, write = IO.pipe
