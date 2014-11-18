@@ -2,6 +2,7 @@ require 'git_bpf/lib/gitflow'
 require 'git_bpf/lib/git-helpers'
 require 'git_bpf/lib/repository'
 require 'find'
+require 'win32/file' if RUBY_PLATFORM =~ /win32/ or RUBY_PLATFORM =~ /mingw32/
 
 #
 # init: 
