@@ -120,7 +120,7 @@ class Init < GitFlow/'init'
       target.cmd("config", "--local", "alias.#{name}", command)
     end
 	
-	command = "'!sh -c "".git/git-bpf/commands/merge-to-integration.sh""'"
+	command = "'!sh -c \".git/git-bpf/commands/merge-to-integration.sh $1\"'"
 	target.cmd("config", "--local", "alias.merge-to-integration", command)
 
 
