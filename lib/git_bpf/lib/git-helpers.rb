@@ -1,4 +1,3 @@
-require 'Win32/Console/ANSI' if RUBY_PLATFORM =~ /win32/ or RUBY_PLATFORM =~ /mingw32/
 #
 # From homebrew (https://raw.github.com/mxcl/homebrew/go).
 #
