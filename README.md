@@ -60,8 +60,10 @@ git_bpf is packaged as a Ruby Gem and hosted on [RubyGems]
 
     git-bpf-init <target-repository>
 
+    OPTIONS
+        -r, --remote NAME                The name of the remote to use for syncing rr-cache, defaults to origin.
+
  - If <target-repository> is not provided, <target-repository> defaults to your current directory (will fail if current directory is not a git repository).
- - The script requires the <target-repository> to have a remote named 'origin'.
 
 ## Upgrading
 
