@@ -182,6 +182,10 @@ class RecreateBranch < GitFlow/'recreate-branch'
   end
 
   def getMergedBranches(base, source)
+    repo = Repository.new(Dir.getwd)
+    remote_recreate = repo.config(true, "--get", "gitbpf.remoterecreate").chomp
+    remote_recreate = remote_recreate.empty? ? '*' : remote_recreate
+
     branches = []
     merges = git('rev-list', '--parents', '--merges', '--reverse', "#{base}...#{source}").strip
 
@@ -190,10 +194,10 @@ class RecreateBranch < GitFlow/'recreate-branch'
       commit = parents.shift
 
       parents.each do |parent|
-        name = git('name-rev', parent, '--name-only').strip
+        name = git('name-rev', parent, '--name-only', "--refs=#{remote_recreate}").strip
         alt_base = git('name-rev', base, '--name-only').strip
-        remote_heads = /remote\/\w+\/HEAD/
-        unless name.include? source or name.include? alt_base or name.match remote_heads
+        remote_heads = /\w+\/HEAD/
+        unless name.include? source or name.include? alt_base or name.match remote_heads or name.eql? 'undefined'
           # Make sure not to include the tilde part of a branch name (e.g. '~2')
           # as this signifies a commit that's behind the head of the branch but
           # we want to merge in the head of the branch.

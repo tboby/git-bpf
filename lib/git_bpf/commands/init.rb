@@ -17,6 +17,7 @@ class Init < GitFlow/'init'
     opts.script_dir_name = 'git-bpf'
     opts.remote_name = 'origin'
     opts.rerere_branch = 'rr-cache'
+    opts.remote_recreate = '"*"'
 
     [
       ['-d', '--directory-name NAME',
@@ -28,6 +29,9 @@ class Init < GitFlow/'init'
       ['-b', '--rerere-branch NAME',
         "",
         lambda { |n| opts.rerere_branch = n }],
+      ['-e', '--remote-recreate NAME',
+        "",
+        lambda { |n| opts.remote_recreate = n }],
     ]
   end
 
@@ -133,6 +137,7 @@ class Init < GitFlow/'init'
     target.config(true, "rerere.autoupdate", "true")
 
     target.config(true, "gitbpf.remotename", opts.remote_name)
+    target.config(true, "gitbpf.remoterecreate", opts.remote_recreate)
 
     rerere_path = File.join(target.git_dir, 'rr-cache')
     target_remote_url = target.remoteUrl(opts.remote_name)
