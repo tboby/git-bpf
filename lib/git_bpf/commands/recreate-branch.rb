@@ -149,7 +149,7 @@ class RecreateBranch < GitFlow/'recreate-branch'
         # There was a conflict. If there's no available rerere for it then it is
         # unresolved and we need to abort as there's nothing that can be done
         # automatically.
-        conflicts = git('rerere', 'status').chomp.split("\n")
+        conflicts = git('rerere', 'remaining').chomp.split("\n")
 
         if conflicts.length != 0
           puts "\n"
