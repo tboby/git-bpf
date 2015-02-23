@@ -187,7 +187,9 @@ class RecreateBranch < GitFlow/'recreate-branch'
 
     merges.split("\n").each do |commits|
       parents = commits.split("\s")
-      commit = parents.shift
+
+      commit = git('name-rev', parents.shift, '--name-only').strip
+      next unless commit.include? source
 
       parents.each do |parent|
         name = git('name-rev', parent, '--name-only').strip
