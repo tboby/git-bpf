@@ -2,6 +2,7 @@ require 'git_bpf/lib/gitflow'
 require 'git_bpf/lib/git-helpers'
 require 'git_bpf/lib/repository'
 require 'find'
+require 'win32/file' if RUBY_PLATFORM =~ /win32/ or RUBY_PLATFORM =~ /mingw32/
 
 #
 # init: 
@@ -135,9 +136,9 @@ class Init < GitFlow/'init'
       command = "!_git-bpf #{name}"
       target.cmd("config", "--local", "alias.#{name}", command)
     end
-	
-	command = "'!sh -c "".git/git-bpf/commands/merge-to-integration.sh""'"
-	target.cmd("config", "--local", "alias.merge-to-integration", command)
+
+    command = '!sh -c \".git/git-bpf/commands/merge-to-integration.sh $1\"'
+    target.cmd("config", "--local", "alias.merge-to-integration", command)
 
 
     #
