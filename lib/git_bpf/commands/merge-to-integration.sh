@@ -62,6 +62,7 @@ if [ $numConflicts -gt 0 ]; then
 fi
 
 echo -e "\033[1;32mNo conflicts detected."
+echo.
 
 # Since no conflicts were detected, offer to push the integration branch to the remote and checkout the original branch
 echo -e -n "\033[1;33mPush integration branch to '$remote' now? "
@@ -71,7 +72,7 @@ if [ "$choice" = "y" ]; then
 	pushResult=$(git push $remote integration)
 	echo $pushResult
 	if ($pushResult); then
-		if [ "$currBranchNotIntegration" = true ]
+		if [ "$currBranchNotIntegration" = true ]; then
 			echo -e -n "\033[1;33mCheckout your previous branch ($currBranch) now? "
 			echo -e -n '\033[0m'
 			read choice
