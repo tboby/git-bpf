@@ -24,13 +24,13 @@ class Init < GitFlow/'init'
         "",
         lambda { |n| opts.script_dir_name = n }],
       ['-r', '--remote-name NAME',
-        "",
+        "Name of remote repo for rr-cache. Defaults to origin",
         lambda { |n| opts.remote_name = n }],
       ['-b', '--rerere-branch NAME',
         "",
         lambda { |n| opts.rerere_branch = n }],
       ['-e', '--remote-recreate NAME',
-        "",
+        "Pattern of branches which will be used in search for merged branches in recreated branch. Dafeaults to *",
         lambda { |n| opts.remote_recreate = n }],
     ]
   end
@@ -175,7 +175,8 @@ class Init < GitFlow/'init'
     hooks_dir = File.join(target.git_dir, "hooks")
     hooks = [
       'post-commit',
-      'post-checkout'
+      'post-checkout',
+      'pre-push'
     ]
 
     ohai "4. Creating symbolic links to git-hooks:", hooks.shell_list
