@@ -72,3 +72,12 @@ Upgrading from older development versions of these scripts is a little bit sketc
 
 [Branch-per-Feature]: https://github.com/affinitybridge/git-bpf/wiki/Branch-per-feature-process
 [RubyGems]: http://rubygems.org/
+
+## Manual install
+
+You need to fetch latest master from this repo. Execute manual gem build
+```gem build git_bpf.gemspec```
+
+This will create gemfile git_bpf-1.0.1.gem . To install it, run
+
+```gem install git_bpf-1.0.1.gem```
