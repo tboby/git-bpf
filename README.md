@@ -81,3 +81,7 @@ You need to fetch latest master from this repo. Execute manual gem build
 This will create gemfile git_bpf-1.0.1.gem . To install it, run
 
 ```gem install git_bpf-1.0.1.gem```
+
+To use new features in your repo, you need to initialize the repo again.
+
+```git-bpf-init```
