@@ -85,3 +85,5 @@ This will create gemfile git_bpf-1.0.1.gem . To install it, run
 To use new features in your repo, you need to initialize the repo again.
 
 ```git-bpf-init ```
+
+Note for windows users - prior to upgrading git-bpf, you need to remove all hooks and git-bpf directory from .git directory in your project.
