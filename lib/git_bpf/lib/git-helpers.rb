@@ -1,68 +1,71 @@
-require 'Win32/Console/ANSI' if RUBY_PLATFORM =~ /win32/ or RUBY_PLATFORM =~ /mingw32/
+require 'rbconfig'
+is_windows = (RbConfig::CONFIG['host_os'] =~ /mswin|mingw|mingw32|cygwin/)
+
+require 'Win32/Console/ANSI' if is_windows
 #
 # From homebrew (https://raw.github.com/mxcl/homebrew/go).
 #
-class String
-    def blue; colorize(self, "1", "34"); end
-	def white; colorize(self, "1", "39"); end
-	def red; colorize(self, "4", "31"); end
-    def yellow; colorize(self, "4", "33"); end
-	def em; colorize(self, "4", "39"); end
-    def green; colorize(self, "0", "32"); end
-	def green; colorize(self, "1", "30"); end
-    def colorize(text, esc_type, color_code); (esc_type != "0" ? "\e[#{esc_type}m" : "") + "\e[#{color_code}m#{text}\e[0m"; end
-end
-
 class Tty
   class <<self
-    def blue; bold 34; end
-    def white; bold 39; end
+    @@is_windows = (RbConfig::CONFIG['host_os'] =~ /mswin|mingw|mingw32|cygwin/)
+	
+	def blue; bold 34; end
+    def white; (reset) + (bold(39)); end
     def red; underline 31; end
-    def yellow; underline 33 ; end
+    def yellow; underline 33; end
     def reset; escape 0; end
     def em; underline 39; end
-    def green; color 92 end
-    def gray; bold 30 end
+    def green; color 92; end
+    def gray; bold 30; end
 
     def width
-      # `/bin/tput cols`.strip.to_i
-	  120
+	  if @@is_windows
+	    120
+	  else
+	    `/usr/bin/tput cols`.strip.to_i
+	  end
     end
+	
+	def isWindows; @@is_windows; end
 
   private
     def color n
       escape 0, "#{n}";
     end
     def bold n
-      escape 1, "#{n}";
+	  escape 1, "#{n}";
     end
     def underline n
-      escape 4, "#{n}";
+	  escape 4, "#{n}";
     end
-    def escape(type, code)
-      "\e[#{type}m\e[#{code}m" if $stdout.tty?
+	def escape(type, code = nil)
+	  if @@is_windows
+	    "\e[#{type}m" + (code != nil ? "\e[#{code}m" : "") if $stdout.tty?
+	  else
+	    "\033[#{type}" + (code != nil ? ";#{code}" : "") + "m" if $stdout.tty?
+	  end
     end
   end
 end
 
 def ohai title, *sput
   title = title.to_s[0, Tty.width - 4] if $stdout.tty?
-  puts "==>".blue + " #{title}".white
+  puts "#{Tty.blue}==>#{Tty.white} #{title}#{Tty.reset}"
   puts sput unless sput.empty?
 end
 
 def oh1 title
   title = title.to_s[0, Tty.width - 4] if $stdout.tty?
-  puts "==>".green + " #{title}".white
+  puts "#{Tty.green}==>#{Tty.white} #{title}#{Tty.reset}"
 end
 
 def opoo warning
-  puts "Warning".red + ": #{warning}"
+  puts "#{Tty.red}Warning#{Tty.reset}: #{warning}"
 end
 
 def onoe error
   lines = error.to_s.split'\n'
-  puts "Error".red + ": #{lines.shift}"
+  puts "#{Tty.red}Error#{Tty.reset}: #{lines.shift}"
   puts lines unless lines.empty?
 end
 
