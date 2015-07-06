@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
+require 'rbconfig'
 require 'optparse'
 require 'ostruct'
 require 'fileutils'
@@ -106,9 +107,11 @@ Using gitflow you can customize per-project git interface.
 
 HELP
 
+  is_windows = (RbConfig::CONFIG['host_os'] =~ /mswin|mingw|mingw32|cygwin/)
+  
   # Pager from http://nex-3.com/posts/73-git-style-automatic-paging-in-ruby
   def pager
-    return if RUBY_PLATFORM =~ /win32/ or RUBY_PLATFORM =~ /mingw32/
+    return if is_windows
     return unless STDOUT.tty?
 
     read, write = IO.pipe
