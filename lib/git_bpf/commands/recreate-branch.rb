@@ -198,35 +198,37 @@ class RecreateBranch < GitFlow/'recreate-branch'
 
     merges.split("\n").each do |commits|
       parents = commits.split("\s", 4)
-      commit_name = parents.pop
+      merge_hash, first_parent_hash, branch_hash, commit_name = parents
 
-      parents.each do |parent|
-        name = git('name-rev', parent, '--name-only', "--refs=#{remote_recreate}").strip
-        alt_base = git('name-rev', base, '--name-only').strip
-        remote_heads = /\w+\/HEAD/
+      name = git('name-rev', branch_hash, '--name-only', "--refs=#{remote_recreate}").strip
+      alt_base = git('name-rev', base, '--name-only').strip
+      remote_heads = /\w+\/HEAD/
 
-        if name.include? source or name.include? alt_base or name.match remote_heads
+      if name.include? source or name.include? alt_base or name.match remote_heads
+        if verbose
+          puts "INFO: <#{commit_name}> skipped because '#{name}' matches #{source} / #{alt_base} / #{remote_heads}"
+          puts '      Possible problem: QA has been merged into branch.'
+          puts '      Solution: Do merge manually.'
+        end
+      elsif name.eql? 'undefined'
+        if verbose
+          puts "INFO: <#{commit_name}> skipped because '#{name}' is 'undefined'"
+          puts '      Possible problem: Branch has been forced.'
+          puts '      Solution: Do merge manually.'
+        end
+      else
+        # Make sure not to include the tilde part of a branch name (e.g. '~2')
+        # as this signifies a commit that's behind the head of the branch but
+        # we want to merge in the head of the branch.
+        name = name.partition('~')[0]
+        # This can lead to duplicate branches, because the name may have only
+        # differed in the tilde portion ('mybranch~1', 'mybranch~2', etc.)
+        if branches.include? name
           if verbose
-            puts "INFO: <#{commit_name}> may be skipped because '#{name}' matches #{source} / #{alt_base} / #{remote_heads}"
-          end
-        elsif name.eql? 'undefined'
-          if verbose
-            puts "INFO: <#{commit_name}> may be skipped because '#{name}' is 'undefined'"
-          end
+            puts "INFO: <#{commit_name}> skipped because it's already in the list."
+         end
         else
-          # Make sure not to include the tilde part of a branch name (e.g. '~2')
-          # as this signifies a commit that's behind the head of the branch but
-          # we want to merge in the head of the branch.
-          name = name.partition('~')[0]
-          # This can lead to duplicate branches, because the name may have only
-          # differed in the tilde portion ('mybranch~1', 'mybranch~2', etc.)
-          if branches.include? name
-            if verbose
-              puts "INFO: <#{commit_name}> may be skipped because '#{branches}' contains #{name}"
-           end
-          else
-            branches.push name
-          end
+          branches.push name
         end
       end
     end
