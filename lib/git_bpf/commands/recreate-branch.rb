@@ -36,6 +36,9 @@ class RecreateBranch < GitFlow/'recreate-branch'
       ['-r', '--remote NAME',
         "Specify the remote repository to work with. Only works with the -d option.",
         lambda { |n| opts.remote = n }],
+      ['-v', '--verbose',
+        "Show reason to ommit branches from recreate.",
+        lambda { |n| opts.verbose = true }],
 
     ]
   end
@@ -87,7 +90,7 @@ class RecreateBranch < GitFlow/'recreate-branch'
     #
     ohai "1. Processing branch '#{source}' for merge-commits..."
 
-    branches = getMergedBranches(opts.base, source)
+    branches = getMergedBranches(opts.base, source, opts.verbose)
 
     if branches.empty?
       terminate "No feature branches detected, '#{source}' matches '#{opts.base}'."
@@ -181,32 +184,49 @@ class RecreateBranch < GitFlow/'recreate-branch'
     end
   end
 
-  def getMergedBranches(base, source)
+  def getMergedBranches(base, source, verbose)
     repo = Repository.new(Dir.getwd)
     remote_recreate = repo.config(true, "--get", "gitbpf.remoterecreate").chomp
     remote_recreate = remote_recreate.empty? ? '*' : remote_recreate
 
     branches = []
-    merges = git('rev-list', '--parents', '--merges', '--reverse', "#{base}...#{source}").strip
+    merges = git('rev-list', '--parents', '--merges', '--first-parent', '--reverse', '--format=oneline', "#{base}...#{source}").strip
+
+    if verbose
+      puts "\nINFO: Branches found between #{base} and #{source}:\n#{merges}\n\n"
+    end
 
     merges.split("\n").each do |commits|
-      parents = commits.split("\s")
-
-      commit = git('name-rev', parents.shift, '--name-only', "--refs=#{source}").strip
-      next unless commit.include? source
+      parents = commits.split("\s", 4)
+      commit_name = parents.pop
 
       parents.each do |parent|
         name = git('name-rev', parent, '--name-only', "--refs=#{remote_recreate}").strip
         alt_base = git('name-rev', base, '--name-only').strip
         remote_heads = /\w+\/HEAD/
-        unless name.include? source or name.include? alt_base or name.match remote_heads or name.eql? 'undefined'
+
+        if name.include? source or name.include? alt_base or name.match remote_heads
+          if verbose
+            puts "INFO: <#{commit_name}> may be skipped because '#{name}' matches #{source} / #{alt_base} / #{remote_heads}"
+          end
+        elsif name.eql? 'undefined'
+          if verbose
+            puts "INFO: <#{commit_name}> may be skipped because '#{name}' is 'undefined'"
+          end
+        else
           # Make sure not to include the tilde part of a branch name (e.g. '~2')
           # as this signifies a commit that's behind the head of the branch but
           # we want to merge in the head of the branch.
           name = name.partition('~')[0]
           # This can lead to duplicate branches, because the name may have only
           # differed in the tilde portion ('mybranch~1', 'mybranch~2', etc.)
-          branches.push name unless branches.include? name
+          if branches.include? name
+            if verbose
+              puts "INFO: <#{commit_name}> may be skipped because '#{branches}' contains #{name}"
+           end
+          else
+            branches.push name
+          end
         end
       end
     end
