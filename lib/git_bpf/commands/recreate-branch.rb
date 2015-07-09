@@ -37,7 +37,7 @@ class RecreateBranch < GitFlow/'recreate-branch'
         "Specify the remote repository to work with. Only works with the -d option.",
         lambda { |n| opts.remote = n }],
       ['-v', '--verbose',
-        "Show reason to ommit branches from recreate.",
+        "Show more info about skipping branches etc.",
         lambda { |n| opts.verbose = true }],
 
     ]
@@ -190,13 +190,23 @@ class RecreateBranch < GitFlow/'recreate-branch'
     remote_recreate = remote_recreate.empty? ? '*' : remote_recreate
 
     branches = []
-    merges = git('rev-list', '--parents', '--merges', '--first-parent', '--reverse', '--format=oneline', "#{base}...#{source}").strip
 
-    if verbose
-      puts "\nINFO: Branches found between #{base} and #{source}:\n#{merges}\n\n"
+    merges = git('rev-list', '--parents', '--merges', '--first-parent', '--reverse', '--format=oneline', "#{base}...#{source}").strip.split("\n")
+    all_merges = git('rev-list', '--parents', '--merges', '--reverse', '--format=oneline', "#{base}...#{source}").strip.split("\n")
+    diff_merges = all_merges - merges
+
+    unless diff_merges.empty?
+      puts "\nINFO: Following merge commits will be skipped:"
+      puts diff_merges.shell_list
+      puts '     (Possible reason: They have been merged into other merged branches.'
+      puts "      OR: Mainline branch has been merged into task branch.)"
     end
 
-    merges.split("\n").each do |commits|
+    if verbose
+      puts "\nINFO: Branches found between #{base} and #{source}:\n#{merges.shell_list}"
+    end
+
+    merges.each do |commits|
       parents = commits.split("\s", 4)
       merge_hash, first_parent_hash, branch_hash, commit_name = parents
 
@@ -207,13 +217,13 @@ class RecreateBranch < GitFlow/'recreate-branch'
       if name.include? source or name.include? alt_base or name.match remote_heads
         if verbose
           puts "INFO: <#{commit_name}> skipped because '#{name}' matches #{source} / #{alt_base} / #{remote_heads}"
-          puts '      Possible problem: QA has been merged into branch.'
+          puts '      Possible problem: Mainline branch has been merged into task branch.'
           puts '      Solution: Do merge manually.'
         end
       elsif name.eql? 'undefined'
         if verbose
           puts "INFO: <#{commit_name}> skipped because '#{name}' is 'undefined'"
-          puts '      Possible problem: Branch has been forced.'
+          puts '      Possible problem: Task branch has been forced.'
           puts '      Solution: Do merge manually.'
         end
       else
@@ -232,6 +242,8 @@ class RecreateBranch < GitFlow/'recreate-branch'
         end
       end
     end
+
+    puts "\n"
 
     return branches
   end
