@@ -60,8 +60,11 @@ git_bpf is packaged as a Ruby Gem and hosted on [RubyGems]
 
     git-bpf-init <target-repository>
 
+    OPTIONS
+        -r, --remote NAME                The name of the remote to use for syncing rr-cache, defaults to origin.
+        -e, --remote_recreate NAME       The pattern for choosing branches for recreate-branch command, defaults to wildcard *. Can be used for filtering certain branches from remote repositories
+
  - If <target-repository> is not provided, <target-repository> defaults to your current directory (will fail if current directory is not a git repository).
- - The script requires the <target-repository> to have a remote named 'origin'.
 
 ## Upgrading
 

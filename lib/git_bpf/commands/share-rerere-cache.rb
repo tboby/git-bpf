@@ -48,13 +48,13 @@ class ShareReReRe < GitFlow/'share-rerere'
 
     def execute(opts, argv)
       rerere = Repository.new opts.work_tree
-      rerere.cmd("pull", '--quiet', opts.remote, opts.branch)
+      rerere.cmd("pull", '--quiet', '--rebase', opts.remote, opts.branch)
     end
   end
 
-  class PushReReRe < ShareReReRe/'push'
+  class CommitReReRe < ShareReReRe/'commit'
 
-    @help = "Push your latest conflict resolutions."
+    @help = "Commit your latest conflict resolutions."
 
     include GitHelpersMixin
     include ShareReReReMixin
@@ -72,10 +72,22 @@ class ShareReReRe < GitFlow/'share-rerere'
           message = "Sharing resolution: #{folder}."
           rerere.cmd("add", folder)
           rerere.cmd("commit", "-m", message)
-          rerere.cmd("push", "--quiet", opts.remote, opts.branch)
           puts message
         end
       end
+    end
+  end
+
+  class PushReReRe < ShareReReRe/'push'
+
+    @help = "Push your conflict resolutions."
+
+    include GitHelpersMixin
+    include ShareReReReMixin
+
+    def execute(opts, argv)
+      rerere = Repository.new opts.work_tree
+      rerere.cmd("push", "--quiet", opts.remote, opts.branch)
     end
   end
 
