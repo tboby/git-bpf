@@ -73,6 +73,10 @@ class ShareReReRe < GitFlow/'share-rerere'
           rerere.cmd("add", folder)
           rerere.cmd("commit", "-m", message)
           puts message
+        else
+          file = line.split("\s").last
+          rerere.cmd("checkout", "--", file)
+          puts "Ignoring modified #{file} in rr-cache"
         end
       end
     end

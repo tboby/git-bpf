@@ -36,6 +36,9 @@ class RecreateBranch < GitFlow/'recreate-branch'
       ['-r', '--remote NAME',
         "Specify the remote repository to work with. Only works with the -d option.",
         lambda { |n| opts.remote = n }],
+      ['-v', '--verbose',
+        "Show more info about skipping branches etc.",
+        lambda { |n| opts.verbose = true }],
 
     ]
   end
@@ -87,7 +90,7 @@ class RecreateBranch < GitFlow/'recreate-branch'
     #
     ohai "1. Processing branch '#{source}' for merge-commits..."
 
-    branches = getMergedBranches(opts.base, source)
+    branches = getMergedBranches(opts.base, source, opts.verbose)
 
     if branches.empty?
       terminate "No feature branches detected, '#{source}' matches '#{opts.base}'."
@@ -181,35 +184,66 @@ class RecreateBranch < GitFlow/'recreate-branch'
     end
   end
 
-  def getMergedBranches(base, source)
+  def getMergedBranches(base, source, verbose)
     repo = Repository.new(Dir.getwd)
     remote_recreate = repo.config(true, "--get", "gitbpf.remoterecreate").chomp
     remote_recreate = remote_recreate.empty? ? '*' : remote_recreate
 
     branches = []
-    merges = git('rev-list', '--parents', '--merges', '--reverse', "#{base}...#{source}").strip
 
-    merges.split("\n").each do |commits|
-      parents = commits.split("\s")
+    merges = git('rev-list', '--parents', '--merges', '--first-parent', '--reverse', '--format=oneline', "#{base}...#{source}").strip.split("\n")
+    all_merges = git('rev-list', '--parents', '--merges', '--reverse', '--format=oneline', "#{base}...#{source}").strip.split("\n")
+    diff_merges = all_merges - merges
 
-      commit = git('name-rev', parents.shift, '--name-only').strip
-      next unless commit.include? source
+    unless diff_merges.empty?
+      puts "\nINFO: Following merge commits will be skipped:"
+      puts diff_merges.shell_list
+      puts '     (Possible reason: They have been merged into other merged branches.'
+      puts "      OR: Mainline branch has been merged into task branch.)"
+    end
 
-      parents.each do |parent|
-        name = git('name-rev', parent, '--name-only', "--refs=#{remote_recreate}").strip
-        alt_base = git('name-rev', base, '--name-only').strip
-        remote_heads = /\w+\/HEAD/
-        unless name.include? source or name.include? alt_base or name.match remote_heads or name.eql? 'undefined'
-          # Make sure not to include the tilde part of a branch name (e.g. '~2')
-          # as this signifies a commit that's behind the head of the branch but
-          # we want to merge in the head of the branch.
-          name = name.partition('~')[0]
-          # This can lead to duplicate branches, because the name may have only
-          # differed in the tilde portion ('mybranch~1', 'mybranch~2', etc.)
-          branches.push name unless branches.include? name
+    if verbose
+      puts "\nINFO: Branches found between #{base} and #{source}:\n#{merges.shell_list}"
+    end
+
+    merges.each do |commits|
+      parents = commits.split("\s", 4)
+      merge_hash, first_parent_hash, branch_hash, commit_name = parents
+
+      name = git('name-rev', branch_hash, '--name-only', "--refs=#{remote_recreate}").strip
+      alt_base = git('name-rev', base, '--name-only').strip
+      remote_heads = /\w+\/HEAD/
+
+      if name.include? source or name.include? alt_base or name.match remote_heads
+        if verbose
+          puts "INFO: <#{commit_name}> skipped because '#{name}' matches #{source} / #{alt_base} / #{remote_heads}"
+          puts '      Possible problem: Mainline branch has been merged into task branch.'
+          puts '      Solution: Do merge manually.'
+        end
+      elsif name.eql? 'undefined'
+        if verbose
+          puts "INFO: <#{commit_name}> skipped because '#{name}' is 'undefined'"
+          puts '      Possible problem: Task branch has been forced.'
+          puts '      Solution: Do merge manually.'
+        end
+      else
+        # Make sure not to include the tilde part of a branch name (e.g. '~2')
+        # as this signifies a commit that's behind the head of the branch but
+        # we want to merge in the head of the branch.
+        name = name.partition('~')[0]
+        # This can lead to duplicate branches, because the name may have only
+        # differed in the tilde portion ('mybranch~1', 'mybranch~2', etc.)
+        if branches.include? name
+          if verbose
+            puts "INFO: <#{commit_name}> skipped because it's already in the list."
+         end
+        else
+          branches.push name
         end
       end
     end
+
+    puts "\n"
 
     return branches
   end
