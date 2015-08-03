@@ -194,7 +194,6 @@ class Init < GitFlow/'init'
     #
     hooks_dir = File.join(target.git_dir, "hooks")
     hooks = [
-      'pre-commit',
       'post-commit',
       'post-checkout',
       'pre-push'
