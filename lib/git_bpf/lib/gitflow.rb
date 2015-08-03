@@ -107,11 +107,11 @@ Using gitflow you can customize per-project git interface.
 
 HELP
 
-  is_windows = (RbConfig::CONFIG['host_os'] =~ /mswin|mingw|mingw32|cygwin/)
+  @@isWindows = (RbConfig::CONFIG['host_os'] =~ /mswin|mingw|mingw32|cygwin/)
   
   # Pager from http://nex-3.com/posts/73-git-style-automatic-paging-in-ruby
   def pager
-    return if is_windows
+    return if @@isWindows
     return unless STDOUT.tty?
 
     read, write = IO.pipe
