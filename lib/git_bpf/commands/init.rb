@@ -121,7 +121,8 @@ class Init < GitFlow/'init'
     scripts = File.join(target.path, '.git', opts.script_dir_name)
 
     if not File.exists? scripts
-      File.symlink source_path, scripts
+      #File.symlink source_path, scripts
+	  `cmd /c mklink /D "#{scripts}" "#{source_path}"`
     elsif File.symlink? scripts
       opoo "Symbolic link already exists."
     else
@@ -212,7 +213,8 @@ class Init < GitFlow/'init'
       end
 
       if write
-        File.symlink source_hook_path, target_hook_path
+        #File.symlink source_hook_path, target_hook_path
+		`cmd /c mklink "#{target_hook_path}" "#{source_hook_path}"`
       else
         opoo "Couldn't link '#{name}' hook as it already exists."
       end

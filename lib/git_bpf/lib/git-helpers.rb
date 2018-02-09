@@ -1,7 +1,6 @@
 require 'rbconfig'
 is_windows = (RbConfig::CONFIG['host_os'] =~ /mswin|mingw|mingw32|cygwin/)
 
-require 'Win32/Console/ANSI' if is_windows
 #
 # From homebrew (https://raw.github.com/mxcl/homebrew/go).
 #
@@ -10,10 +9,10 @@ class Tty
     @@is_windows = (RbConfig::CONFIG['host_os'] =~ /mswin|mingw|mingw32|cygwin/)
 	
 	def blue; bold 34; end
-    def white; (reset) + (bold(39)); end
+	def reset; escape 0; end
+    def white; escape(0, bold(39)); end
     def red; underline 31; end
     def yellow; underline 33; end
-    def reset; escape 0; end
     def em; underline 39; end
     def green; color 92; end
     def gray; bold 30; end
@@ -130,6 +129,7 @@ module GitHelpersMixin
   def promptYN(message)
     puts
     puts "#{message} [y/N]"
+	STDOUT.flush
     unless STDIN.gets.chomp == 'y'
       return false
     end
