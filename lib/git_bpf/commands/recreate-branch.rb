@@ -210,8 +210,8 @@ class RecreateBranch < GitFlow/'recreate-branch'
       parents = commits.split("\s", 4)
       merge_hash, first_parent_hash, branch_hash, commit_name = parents
 
-      name = git('name-rev', branch_hash, '--name-only', "--refs=#{remote_recreate}").strip
-      alt_base = git('name-rev', base, '--name-only').strip
+      name = git('name-rev', branch_hash,'--refs', 'refs/heads/*', '--name-only', "--refs=#{remote_recreate}").strip
+      alt_base = git('name-rev', base,'--refs', 'refs/heads/*', '--name-only').strip
       remote_heads = /\w+\/HEAD/
 
       if name.include? source or name.include? alt_base or name.match remote_heads
